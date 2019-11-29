@@ -17,31 +17,40 @@ class States(Enum):
 	WAIT_ACK_ZERO = 1
 	WAIT_CALL_ONE = 2
 	WAIT_ACK_ONE = 3
+	UNK = 4
 
 	pass
 
 class Rdt_3_0:
 	""" This a RDT3.0 Simulation to run over UDP
 	
-		-First you need to class config_client with the adress
+		-First you need to call config_server or config_client with the address
 		otherwise this class will have a unespect behavior
 
 	"""
 
-	def __init__(self,host,port):
-		self.state = States.WAIT_ACK_ZERO
-		self.sock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-		self.sock.bind((host,port))
-
-		self.timer = threading.Timer(3.0,Rdt_3_0.timeout,args=(self,))
-
-		self.timer.start()
-		self.bytes_to_send = str("teste").encode()
-		self.client = ('localhost',8080)
+	def __init__(self):
+		self.state = States.UNKNOW
+		self.sock = None
+		self.bytes_to_send = None
+		self.client = None
+		self.type = "UNKNOW"
 	pass
 
-	def config_client(adress):
-		self.client = adress
+	def config_server(self,address=('localhost',5000)):
+		self.type = "SERVER"
+
+		self.state = States.WAIT_ACK_ZERO
+		self.sock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+		self.sock.bind(address)
+
+		self.timer = threading.Timer(3.0,Rdt_3_0.timeout,args=(self,))
+	pass
+
+	def config_client(self):
+		self.type = "CLIENT"
+
+		self.state = 
 	pass
 
 	def timeout(self):
@@ -54,9 +63,12 @@ class Rdt_3_0:
 			self.timer.start()
 	pass 
 
-	def update(self,next_state):
-		self.state = state
+	def next_state(self,nextstate):
+		self.state = nextstate
 	pass
+
+	def state_machine(self):
+
 
 
 def register_in_dns(dns_address): 
@@ -91,7 +103,9 @@ def main():
 		
 		register_in_dns(('localhost',8080))
 
-		sm = Rdt_3_0('localhost',5000)
+		sm = Rdt_3_0()
+
+		sm.config_server(('localhost',5000))
 
 		while True:
 			sm.restart_timer()

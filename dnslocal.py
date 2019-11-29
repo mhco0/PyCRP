@@ -16,6 +16,5 @@ def main():
 		print("recive from : {}".format(client_address))
 		print(data.decode())
 
-
 if __name__ == '__main__':
 	main()
