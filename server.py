@@ -2,7 +2,6 @@ import socket
 import sys
 import threading
 import rdt
-from enum import Enum
 
 """ Usage ports ->
 	8080 : dns local
@@ -42,13 +41,13 @@ def main():
 		
 		register_in_dns(('localhost',8080))
 
-		sm = Rdt_3_0()
+		sm = rdt.Rdt_3_0()
 
-		sm.config_server(('localhost',5000))
+		#sm.config_server(('localhost',5000))
 
-		while True:
-			sm.restart_timer()
-			pass
+		#while True:
+		#	sm.restart_timer()
+		#	pass
 
 	elif sys.argv[1].lower() == "--tcp":
 		"""
