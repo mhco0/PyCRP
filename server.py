@@ -1,6 +1,7 @@
 import socket
 import sys
 import threading
+import rdt
 from enum import Enum
 
 """ Usage ports ->
@@ -8,68 +9,6 @@ from enum import Enum
 
 	5000 : server
 """
-
-
-class States(Enum):
-	""" A enum class for my states """
-
-	WAIT_CALL_ZERO = 0
-	WAIT_ACK_ZERO = 1
-	WAIT_CALL_ONE = 2
-	WAIT_ACK_ONE = 3
-	UNK = 4
-
-	pass
-
-class Rdt_3_0:
-	""" This a RDT3.0 Simulation to run over UDP
-	
-		-First you need to call config_server or config_client with the address
-		otherwise this class will have a unespect behavior
-
-	"""
-
-	def __init__(self):
-		self.state = States.UNKNOW
-		self.sock = None
-		self.bytes_to_send = None
-		self.client = None
-		self.type = "UNKNOW"
-	pass
-
-	def config_server(self,address=('localhost',5000)):
-		self.type = "SERVER"
-
-		self.state = States.WAIT_ACK_ZERO
-		self.sock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-		self.sock.bind(address)
-
-		self.timer = threading.Timer(3.0,Rdt_3_0.timeout,args=(self,))
-	pass
-
-	def config_client(self):
-		self.type = "CLIENT"
-
-		self.state = 
-	pass
-
-	def timeout(self):
-		self.sock.sendto(self.bytes_to_send,self.client)
-	pass
-
-	def restart_timer(self):
-		if not self.timer.is_alive():
-			self.timer = threading.Timer(3.0,Rdt_3_0.timeout,args=(self,))
-			self.timer.start()
-	pass 
-
-	def next_state(self,nextstate):
-		self.state = nextstate
-	pass
-
-	def state_machine(self):
-
-
 
 def register_in_dns(dns_address): 
 
