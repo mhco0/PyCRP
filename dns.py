@@ -16,7 +16,7 @@ def find_server(server_alias):
 		return "NOT FOUND"
 
 def send_ip(client_address):
-	
+	pass
 
 def main():
 
@@ -33,12 +33,14 @@ def main():
 		print ("\tDATA: {}".format(get_command(data)))
 
 		command, server_alias = get_command(data)
+		print("Command:", command)
 
 		if command == 'ADD':
 			add_server(server_alias,client_address[0])
 			print (server_mapping)
 		elif command == 'FIND':
-			print(find_server(server_alias))
+			result = find_server(server_alias)
+			dnsSocket.sendto(str(result).encode(), client_address)
 
 if __name__ == "__main__" :
     main()
