@@ -53,7 +53,6 @@ class Rdt_3_0:
 		otherwise this class will have a unespect behavior
 
 	"""
-
 	def __init__(self):
 		self.state = States.UNKNOW
 		self.sock = None

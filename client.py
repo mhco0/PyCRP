@@ -14,8 +14,6 @@ def get_ip_from_dns(addrDomain = "crp.server.teste", dns_addr = ("localhost", 80
     data, address = udpSocket.recvfrom(1024)
     print(data.decode())
 
-    pass
-
 def main():
     assert len(sys.argv) == 2
     addrServer = input("Insira o endereço de domínio hospedeiro desejado: ")
@@ -23,13 +21,10 @@ def main():
     ipServer = get_ip_from_dns()
 
     if sys.argv[1].lower() == "--udp":
-        pass
-       # sm = rdt.Rdt_3_0()
-       # sm.config_client()
+        sm = rdt.Rdt_3_0()
+        sm.config_client()
     elif sys.argv[1].lower() == "--tcp":
         pass
-
-    return 0
 
 if __name__ == "__main__":
     main()
