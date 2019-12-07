@@ -1,4 +1,6 @@
 from enum import Enum
+import socket
+import threading
 
 
 class States(Enum):
@@ -32,28 +34,24 @@ class Package:
 		pass
 
 	def convert_pack(data):
-		mss = int(data[:24])
+		sqn = int.from_bytes(data[:24],byteorder = 'big',signed = True)
 		real_data = data[24:]
 
-		return mss,real_data
-		pass
+		return sqn,real_data
 
 	def mss(self):
 		return self.mss
-		pass
 
 	def mss():
-		return MSS
+		return Package.MSS
 
 	def start(self):
 		return self.bytes_sent
-		pass
 
-	def has_sent_first_package():
+	def has_sent_first_package(self):
 		return self.first_send
-		pass
 
-	def first_package_sent():
+	def first_package_sent(self):
 		self.first_send = True
 		pass
 
@@ -75,7 +73,7 @@ class Package:
 
 	def all_sent(self):
 		return self.start() == len(self.array_bytes)
-		pass
+	
 
 
 class Rdt:
@@ -83,6 +81,8 @@ class Rdt:
 	
 		-First you need to call config_server or config_client with the address
 		otherwise this class will have a unespect behavior
+
+		-We use ('localhost',5000) as default
 
 	"""
 
@@ -96,7 +96,7 @@ class Rdt:
 		self.ack = None
 		pass
 
-	def config_reciever(self,address=('localhost',5000)):
+	def config_receiever(self,address=('localhost',5000)):
 		self.type = "RECEIEVER"
 
 		self.state = States.WAIT_SQ_ZERO
@@ -111,6 +111,7 @@ class Rdt:
 		self.type = "TRANSMITTER"
 
 		self.state = States.WAIT_CALL_ZERO
+		self.sock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 		self.receiver = address
 		self.timer = threading.Timer(3.0,Rdt.timeout,args=(self,))
 		pass
@@ -122,7 +123,7 @@ class Rdt:
 		pass
 
 	def timeout(self):
-		self.sock.sendto(self.package.bytes_to_send(),self.server)
+		self.sock.sendto(self.package.bytes_to_send(),self.receiver)
 		self.restart_timer()
 		pass 
 
@@ -140,7 +141,13 @@ class Rdt:
 			print("Not all data sent")
 		pass
 
+	def recv(self):
+		return self.state_machine()
+		pass
+
 	def state_machine(self):
+		all_data = []
+
 		if self.type == "TRANSMITTER":
 			if self.flag_from_above :
 				first_pack = False
@@ -154,7 +161,7 @@ class Rdt:
 					elif self.state == States.WAIT_ACK_ZERO:
 						ack, recv_address = self.sock.recvfrom(1024)
 
-						if ack == 0  and recv_address == self.receiver:
+						if ack.decode() == '0'  and recv_address == self.receiver:
 							self.timer.cancel()
 							if not first_pack:
 								self.package.next_sq_num()
@@ -172,7 +179,7 @@ class Rdt:
 					elif self.state == States.WAIT_ACK_ONE:
 						ack, recv_address = self.sock.recvfrom(1024)
 
-						if ack == 1 and recv_address == self.receiver:
+						if ack.decode() == '1' and recv_address == self.receiver:
 							self.timer.cancel()
 							if not first_pack:
 								self.package.next_sq_num()
@@ -187,20 +194,47 @@ class Rdt:
 
 				print("All data sent")
 		elif self.type == "RECEIEVER":
-			data = None
-			first_pack = False
+			first_pack = True
+			package_size = 0
 
 			while True:
 				# last this
 				if self.state == States.WAIT_SQ_ZERO:
 					bpack, tmitt_address = self.sock.recvfrom(Package.mss())
+
+					sqn,data = Package.convert_pack(bpack)
+
+					if sqn == 0 : 
+						if first_pack :	
+							package_size = int.from_bytes(data,byteorder = 'big',signed = True)
+							first_pack = False
+						else:
+							all_data += data
+
+						self.sock.sendto('0'.encode(),tmitt_address)
+
 				elif self.state == State.WAIT_SQ_ONE:
 					bpack, tmtt_address = self.sock.recvfrom(Package.mss())	
+
+					sqn,data = Package.convert_pack(bpack)
+
+					if sqn == 1 : 
+						if first_pack :	
+							package_size = int.from_bytes(data,byteorder = 'big',signed = True)
+							first_pack = False
+						else:
+							all_data += data
+
+						self.sock.sendto('1'.encode(),tmitt_address)
 				else:
 					raise NameError ("Invalid state Receiver")
+
+				if not first_pack and len(all_data) == package_size:
+					break
+
+			print("All data received")
 
 		else:
 			raise NameError("RDT type not defined")
 
-		pass
-
+		return all_data
