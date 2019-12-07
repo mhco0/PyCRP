@@ -1,6 +1,7 @@
 import dns
 import sys
 import socket
+import rdt
 
 def get_ip_from_dns(addrDomain = "crp.server.teste", dns_addr = ("localhost", 8080)):
 
@@ -16,13 +17,16 @@ def get_ip_from_dns(addrDomain = "crp.server.teste", dns_addr = ("localhost", 80
 
 def main():
     assert len(sys.argv) == 2
-    addrServer = input("Insira o endereço de domínio hospedeiro desejado: ")
+    #addrServer = input("Insira o endereço de domínio hospedeiro desejado: ")
 
-    ipServer = get_ip_from_dns()
+    #ipServer = get_ip_from_dns()
 
     if sys.argv[1].lower() == "--udp":
-        sm = rdt.Rdt_3_0()
-        sm.config_client()
+        sm = rdt.Rdt()
+
+        sm.config_transmitter(('localhost',5000))
+
+        sm.send("teste meme so pra ver se vai".encode())
     elif sys.argv[1].lower() == "--tcp":
         pass
 

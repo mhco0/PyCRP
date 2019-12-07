@@ -41,13 +41,12 @@ def main():
 		
 		register_in_dns(('localhost',8080))
 
-		sm = rdt.Rdt_3_0()
+		sm = rdt.Rdt()
 
-		#sm.config_server(('localhost',5000))
+		sm.config_receiever(('localhost',5000))
 
-		#while True:
-		#	sm.restart_timer()
-		#	pass
+		while True:
+			data = sm.recv()
 
 	elif sys.argv[1].lower() == "--tcp":
 		"""
