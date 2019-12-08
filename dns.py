@@ -5,17 +5,17 @@ server_mapping = {}
 
 def get_command(data):
 	return data.decode().split(' ',1)
-
+	pass
+	
 def add_server(server_alias,ip_address):
 	server_mapping[server_alias] = ip_address
+	pass
 
 def find_server(server_alias):
 	if server_alias in server_mapping:
 		return server_mapping[server_alias]
 	else:
 		return "NOT FOUND"
-
-def send_ip(client_address):
 	pass
 
 def main():
