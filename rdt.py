@@ -14,7 +14,6 @@ class States(Enum):
 
 	pass
 
-
 class Package:
 	"""Docstring for Package
 		Your Object must to have a explicit convertion for String

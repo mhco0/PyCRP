@@ -149,7 +149,7 @@ class Library:
         ltext.pack(side = TOP, expand = YES, padx = 20, pady = 60, fill = BOTH)
 
     def About(self):
-        messagebox.showinfo("Created by","mvca, nss2, mhco e thalisson")
+        messagebox.showinfo("Created by","mvca, nss2, mhco e tmt2")
     
     def Main_Menu(self):
         root = Tk()
