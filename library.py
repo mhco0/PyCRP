@@ -106,7 +106,7 @@ class Library:
             messagebox.showerror("ERROR", "The book doesn't exist!")
 
     def Upload_Window(self):
-        myBooks = self.Show_My_Books()
+        myBooks = os.listdir("./books")
         txt = 'Your books:  \n'
         for name in myBooks:
             txt = txt + name[:len(name)-4] +', '
@@ -130,8 +130,23 @@ class Library:
         binput = Button(uploadWindow, text = 'Upload', width=20,bg = "#20B2AA", fg ="white", command= lambda: self.Upload_Book(einput.get(), myBooks))
         binput.pack(side= BOTTOM, expand = YES, padx = 10, pady = [0, 20], fill = BOTH)
 
+    
+
     def Show_My_Books(self):
-        return os.listdir("./books")
+        myBooks = os.listdir("./books")
+        txt = 'Your books:  \n\n'
+        for name in myBooks:
+            txt = txt + name[:len(name)-4] +', '
+        txt = txt[:len(txt)-2] + '.'
+
+        myBookWindow = Tk()
+        myBookWindow.geometry("300x200")
+        myBookWindow.minsize(width= 300, height = 200)
+        myBookWindow.title("My Books")
+        myBookWindow.configure(bg = 'white')
+    
+        ltext = Label(myBookWindow, text = txt, fg = "black", bg="white",font = ("Purisa, 13"))
+        ltext.pack(side = TOP, expand = YES, padx = 20, pady = 60, fill = BOTH)
 
     def About(self):
         messagebox.showinfo("Created by","mvca, nss2, mhco e thalisson")
