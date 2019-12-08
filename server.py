@@ -39,7 +39,7 @@ def main():
 	if sys.argv[1].lower() == "--udp" :
 		##justfortst
 		
-		register_in_dns(('localhost',8080))
+		#register_in_dns(('localhost',8080))
 
 		sm = rdt.Rdt()
 
@@ -47,6 +47,7 @@ def main():
 
 		while True:
 			data = sm.recv()
+			print(data)
 
 	elif sys.argv[1].lower() == "--tcp":
 		"""

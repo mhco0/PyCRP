@@ -26,7 +26,7 @@ def main():
 
         sm.config_transmitter(('localhost',5000))
 
-        sm.send("teste meme so pra ver se vai".encode())
+        sm.send({232:"meme"})
     elif sys.argv[1].lower() == "--tcp":
         pass
 

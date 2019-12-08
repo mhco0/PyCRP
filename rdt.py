@@ -1,7 +1,5 @@
 from enum import Enum
 import socket
-import threading
-
 
 class States(Enum):
 	""" A enum class for my states """
@@ -18,15 +16,18 @@ class States(Enum):
 
 
 class Package:
-	"""Docstring for Package"""
+	"""Docstring for Package
+		Your Object must to have a explicit convertion for String
+		or this class will not work
+	"""
 
 	MSS = 2048
 
 	def __init__(self,data,myMSS = 1024):
 		# MSS must be multiple of 2
-		self.seq_num = 0
+		self.seq_num = '0'
 		self.bytes_sent = 0
-		self.array_bytes = bytes(data)
+		self.array_bytes = str(data).encode()
 		self.len_pack = len(self.array_bytes)
 		self.first_send = False
 		self.mss = myMSS
@@ -34,8 +35,9 @@ class Package:
 		pass
 
 	def convert_pack(data):
-		sqn = int.from_bytes(data[:24],byteorder = 'big',signed = True)
-		real_data = data[24:]
+		data = data.decode()
+		sqn = data[0]
+		real_data = data[1:]
 
 		return sqn,real_data
 
@@ -44,6 +46,10 @@ class Package:
 
 	def mss():
 		return Package.MSS
+
+	def set_upper_mss(upper):
+		Package.MSS = upper
+		pass
 
 	def start(self):
 		return self.bytes_sent
@@ -56,19 +62,26 @@ class Package:
 		pass
 
 	def next_sq_num(self):
-		self.seq_num = not self.seq_num
+		if self.seq_num == '0':
+			self.seq_num = '1'
+		elif self.seq_num == '1':
+			self.seq_num = '0'
+		else:
+			raise NameError("Unespect sequence number")
+
 
 		if self.has_sent_first_package() :
-			self.bytes_sent = min(self.start()+self.mss,len(self.array_bytes))
+			self.bytes_sent = min(self.start()+self.mss,self.len_pack)
 
 		pass
 
 	# The first byte in the package always will be the sequence number for acks in the rdt class
 	def bytes_to_send(self):
 		if self.has_sent_first_package() :
-			return bytes(self.seq_num) + array_bytes[self.start():min(self.start()+self.mss,len(self.array_bytes))]
+			print(self.array_bytes[self.start():min(self.start()+self.mss,self.len_pack)])
+			return self.seq_num.encode() + self.array_bytes[self.start():min(self.start()+self.mss,self.len_pack)]
 		else:
-			return bytes(self.seq_num) + bytes(self.len_pack)
+			return self.seq_num.encode() + str(self.len_pack).encode()
 		pass
 
 	def all_sent(self):
@@ -91,8 +104,6 @@ class Rdt:
 		self.package = None
 		self.receiever = None
 		self.type = "UNKNOW"
-		self.flag_from_above = False
-		self.ack = None
 		pass
 
 	def config_receiever(self,address=('localhost',5000)):
@@ -102,8 +113,7 @@ class Rdt:
 		self.sock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 		self.sock.bind(address)
 
-		self.timer = None
-		self.ack = 0
+		self.stop_timer()
 		pass
 
 	def config_transmitter(self,address):
@@ -112,124 +122,176 @@ class Rdt:
 		self.state = States.WAIT_CALL_ZERO
 		self.sock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 		self.receiver = address
-		self.timer = threading.Timer(3.0,Rdt.timeout,args=(self,))
+
+		self.stop_timer()
 		pass
 
-	def restart_timer(self):
-		if not self.timer.is_alive():
-			self.timer = threading.Timer(3.0,Rdt_3_0.timeout,args=(self,))
-			self.timer.start()
+	def start_timer(self):
+		self.sock.settimeout(3.0)
+		pass
+
+	def stop_timer(self):
+		self.sock.settimeout(None)
 		pass
 
 	def timeout(self):
 		self.sock.sendto(self.package.bytes_to_send(),self.receiver)
-		self.restart_timer()
+		self.start_timer()
 		pass 
 
 	def next_state(self,nextstate):
 		self.state = nextstate
 		pass
 
+	def reset_state(self):
+
+		if self.type == "TRANSMITTER":
+			self.state = States.WAIT_CALL_ZERO
+		elif self.type == "RECEIEVER":
+			self.state = States.WAIT_SQ_ZERO
+		else:
+			raise NameError("Type Undefined")
+		pass
+
 	def send(self,data):
 		if self.package == None or (self.package != None and self.package.all_sent()):
 			self.package = Package(data)
-			self.flag_from_above = True
-
 			self.state_machine()
+			self.reset_state()
 		else:
 			print("Not all data sent")
 		pass
 
 	def recv(self):
-		return self.state_machine()
-		pass
+		recv_data = self.state_machine()
+		self.reset_state()
+		return recv_data
 
 	def state_machine(self):
-		all_data = []
+		all_data = ''
 
 		if self.type == "TRANSMITTER":
-			if self.flag_from_above :
-				first_pack = False
-				while not self.package.all_sent():
+			first_pack = True
+			while True:
 
-					if self.state == States.WAIT_CALL_ZERO:
-						self.sock.sendto(self.package.bytes_to_send(),self.receiver)
-						self.timer.start()
-						self.next_state(States.WAIT_ACK_ZERO)
+				if self.state == States.WAIT_CALL_ZERO:
+					print(self.package.bytes_to_send())
+					self.sock.sendto(self.package.bytes_to_send(),self.receiver)
+					self.start_timer()
+					self.next_state(States.WAIT_ACK_ZERO)
 
-					elif self.state == States.WAIT_ACK_ZERO:
+				elif self.state == States.WAIT_ACK_ZERO:
+					try:
 						ack, recv_address = self.sock.recvfrom(1024)
 
-						if ack.decode() == '0'  and recv_address == self.receiver:
-							self.timer.cancel()
-							if not first_pack:
+						if ack.decode() == '0':
+							self.stop_timer()
+							if first_pack:
+								first_pack = False
 								self.package.next_sq_num()
-							else:
-								first_pack = True
 								self.package.first_package_sent()
+							else:
 								self.package.next_sq_num()
+
 							self.next_state(States.WAIT_CALL_ONE)
+						else:
+							raise NameError("Corrupted Ack")
 
-					elif self.state == States.WAIT_CALL_ONE:
-						self.sock.sendto(self.package.bytes_to_send(),self.receiver)
-						self.timer.start()
-						self.next_state(States.WAIT_ACK_ONE)
+					except socket.timeout:
+						self.timeout()
 
-					elif self.state == States.WAIT_ACK_ONE:
+				elif self.state == States.WAIT_CALL_ONE:
+					print(self.package.bytes_to_send())
+					self.sock.sendto(self.package.bytes_to_send(),self.receiver)
+					self.start_timer()
+					self.next_state(States.WAIT_ACK_ONE)
+
+				elif self.state == States.WAIT_ACK_ONE:
+					try:
 						ack, recv_address = self.sock.recvfrom(1024)
 
-						if ack.decode() == '1' and recv_address == self.receiver:
-							self.timer.cancel()
-							if not first_pack:
+						if ack.decode() == '1':
+							self.stop_timer()
+							if first_pack:
+								first_pack = False
 								self.package.next_sq_num()
-							else:
-								first_pack = True
 								self.package.first_package_sent()
+							else:
 								self.package.next_sq_num()
+
 							self.next_state(States.WAIT_CALL_ZERO)
+						else:
+							raise NameError("Corrupted Ack")
 
-					else:
-						raise NameError("Invalid state Transmitter")
+					except socket.timeout:
+						self.timeout()
+				else:
+					raise NameError("Invalid state Transmitter")
 
-				print("All data sent")
+				if self.package.all_sent():
+					break
+
+			print("All data sent")
 		elif self.type == "RECEIEVER":
 			first_pack = True
-			package_size = 0
+			package_size = -1
 
 			while True:
 				# last this
 				if self.state == States.WAIT_SQ_ZERO:
-					bpack, tmitt_address = self.sock.recvfrom(Package.mss())
+					print('here')
+					try:
+						bpack, tmitt_address = self.sock.recvfrom(Package.mss())
 
-					sqn,data = Package.convert_pack(bpack)
+						sqn,data = Package.convert_pack(bpack)
+						print(data)
 
-					if sqn == 0 : 
-						if first_pack :	
-							package_size = int.from_bytes(data,byteorder = 'big',signed = True)
-							first_pack = False
+						if sqn == '0' : 
+							if first_pack :	
+								package_size = int(data)
+								first_pack = False
+							else:
+								all_data += data
+
+							self.sock.sendto('0'.encode(),tmitt_address)
+							self.next_state(States.WAIT_SQ_ONE)
+						elif sqn == '1':
+							self.sock.sendto('0'.encode(),tmitt_address)
 						else:
-							all_data += data
+							raise NameError("Invalid sequence number")
+					finally:
+						pass 
 
-						self.sock.sendto('0'.encode(),tmitt_address)
+				elif self.state == States.WAIT_SQ_ONE:
+					print('now here')
+					try:
+						bpack, tmtt_address = self.sock.recvfrom(Package.mss())	
 
-				elif self.state == State.WAIT_SQ_ONE:
-					bpack, tmtt_address = self.sock.recvfrom(Package.mss())	
+						sqn,data = Package.convert_pack(bpack)
+						print(data)
 
-					sqn,data = Package.convert_pack(bpack)
+						if sqn == '1': 
+							if first_pack :	
+								package_size = int(data)
+								first_pack = False
+							else:
+								all_data += data
 
-					if sqn == 1 : 
-						if first_pack :	
-							package_size = int.from_bytes(data,byteorder = 'big',signed = True)
-							first_pack = False
+							self.sock.sendto('1'.encode(),tmitt_address)
+							self.next_state(States.WAIT_SQ_ZERO)
+						elif sqn == '0':
+							self.sock.sendto('1'.encode(),tmtt_address)
 						else:
-							all_data += data
+							raise NameError("Invalid sequence number")
+					finally:
+						pass
 
-						self.sock.sendto('1'.encode(),tmitt_address)
 				else:
 					raise NameError ("Invalid state Receiver")
 
 				if not first_pack and len(all_data) == package_size:
 					break
+
 
 			print("All data received")
 
