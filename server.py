@@ -55,10 +55,9 @@ def tcp_server_connection_handler(key, mask):
 
 
 
-def register_in_dns(dns_address): 
+def register_in_dns(dns_address, server_alias = "crp.server.teste" ): 
 	udpSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-	server_alias = "crp.server.teste" 
 	# # server_ip = socket.gethostbyname(socket.gethostname())
 	# data = "ADD " + server_alias
 
@@ -96,28 +95,54 @@ def help():
 	pass
 
 
+def OpenBook(nameBook = "marcos.txt"):
+	path = "./books/" + nameBook
+	book = open(path, 'r')
+	text = book.read()
+	print(text)
+	book.close()
+	return text
+
+def SaveBook(nameBook= "Marcos", text= "oi\neu\nsou\nmarcos"):
+	path = "./books/" + nameBook
+	newBook = open(path, 'x')
+	newBook.write(text)
+	newBook.close()
+
 def main():
 	dns_address = ('localhost',8080)
 	server_address = ('localhost',5000)
 	assert len(sys.argv) == 2
 
 	if sys.argv[1].lower() == "--udp" :
-		##justfortst
-		
-		register_in_dns(('localhost',8080))
+
+		register_in_dns(dns_address)
 
 		sm = rdt.Rdt()
 
-		sm.config_receiever(('localhost',5000))
-		lb = library.Library(sm, ('localhost, 8000'), "")
 		while True:
-			data = sm.recv()
-			print(data)
+			sm.config_receiever(server_address)
+			data, ip_transmissor = sm.recv()
+			addr_client = (ip_transmissor[0], 9090)
+			print("Recebi dados: ", data, addr_client)
 			if data == "getallnamebooks":
-				serverBooks = lb
+				serverBooks = os.listdir("./books")
+				sm.config_transmitter(ip_transmissor)
+				sm.send(serverBooks)
 
-
-
+			params = data.split()
+			if params[0].lower() == "download":
+				nameBook = params[1] 
+				txt = OpenBook(nameBook)
+				sm.config_transmitter(ip_transmissor)
+				sm.send(txt)
+			if params[0].lower() == "upload":
+				newBook = params[1]
+				sm.config_receiever(server_address)
+				txt, ip_transmissor = sm.recv()
+				SaveBook(newBook, txt)
+			else:
+				print("Não existe essa opção mermao")
 
 	elif sys.argv[1].lower() == "--tcp":
 		tcp_server_setup(server_address)

@@ -58,13 +58,19 @@ class Library(object):
             if bname == bookName:
                 exist = True
         if exist:
-            ## Envia/Recebe para/do o servidor
-            msg = "download "+ bookName
-            self.sm.config_transmitter(self.AddrServer)
-            self.sm.send(msg)
-            # Recebo do servidor o livro requisitado
-            self.sm.config_receiever(self.myAddr)
-            book = self.sm.recv()
+            
+            if self.typeSocket == "--udp":
+                ## Envia solicitação de livro pro serve e recebe o livro dps
+                msg = "download "+ bookName
+                self.sm.config_transmitter(self.AddrServer)
+                self.sm.send(msg)
+                # Recebo do servidor o livro requisitado
+                self.sm.config_receiever(self.myAddr)
+                book = self.sm.recv()
+            
+            elif self.typeSocket == "--tcp":
+                #Parte de natália
+                pass
 
             self.SaveBook(bookName, book)
             messagebox.showinfo("Download", "The book has been downloaded!")
@@ -74,6 +80,7 @@ class Library(object):
 
     def Download_Window(self):
         books = self.Get_Books_From_Server()
+        print("Recebi: ", books)
         txt = 'Books Avaible:  \n'
         for name in books:
             txt = txt + name[:len(name)-4] +', '
@@ -105,17 +112,21 @@ class Library(object):
             if bname == bookName:
                 exist = True
         if exist:
-            ## Envia para o servidor
-            print("Envia pro server")
-
-            msg = "upload " + bookName
-            # Aviso pro servidor que é um upload de um livro
-            self.sm.config_transmitter(self.AddrServer)
-            self.sm.send(msg)
-            book = self.OpenBook(bookName)
-            # Envio o livro pro servidor
-            self.sm.config_transmitter(self.AddrServer)
-            self.sm.send(book)
+            
+            if self.typeSocket == "--udp":
+                ## Envia para o servidor
+                print("Envia pro server")
+                msg = "upload " + bookName
+                # Aviso pro servidor que é um upload de um livro
+                self.sm.config_transmitter(self.AddrServer)
+                self.sm.send(msg)
+                book = self.OpenBook(bookName)
+                # Envio o livro pro servidor
+                self.sm.config_transmitter(self.AddrServer)
+                self.sm.send(book)
+            elif self.typeSocket == "--tcp":
+                # Parte de natália
+                pass
 
             messagebox.showinfo("Upload", "The book has been sent to the server!")
         else:

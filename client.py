@@ -68,9 +68,9 @@ def get_ip_from_dns(addrDomain = "crp.server.teste", dns_address = ("localhost",
     udpSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
         print('sending {!r}'.format(data))
-        sent = udpSocket.sendto(str(data).encode(),dns_address)
+        udpSocket.sendto(str(data).encode(),dns_address)
 
-        data, address = udpSocket.recvfrom(1024)
+        data, _ = udpSocket.recvfrom(1024)
         # print(data.decode())
         # print(address)
     finally:
@@ -84,20 +84,20 @@ def get_ip_from_dns(addrDomain = "crp.server.teste", dns_address = ("localhost",
 
 def main():
     assert len(sys.argv) == 2
-    addrServer = input("Insira o endereço de domínio hospedeiro desejado: ")
 
-    ipServer = get_ip_from_dns()
+    server_ip = get_ip_from_dns()
+    print("server ip: ", server_ip)
     sm = rdt.Rdt()
-    ip_port = (ipServer, 5000)
+    ip_port = (server_ip, 5000)
 
     print("to aq")
     library.Library(sm, ip_port, sys.argv[1].lower())
     library.mainloop()
-    dns_address = ('localhost',8080)
-    
-    server_ip = get_ip_from_dns(addrServer, dns_address)
-    print('server ip =',server_ip)
-    server_address = (server_ip,5000)
+    #dns_address = ('localhost',8080)
+
+    # server_ip = get_ip_from_dns(ipServer, dns_address)
+    # print('server ip =',server_ip)
+    # server_address = (server_ip,5000)
 
     # if sys.argv[1].lower() == "--udp":
     #     sm = rdt.Rdt()
