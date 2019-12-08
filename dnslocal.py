@@ -3,18 +3,24 @@ import sys
 
 def main():
 
-	host = 'localhost'
-	port = 8080
+	dns_address = ('localhost', 8080)
 
 	sock =  socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+	print('starting up on {} port {}'.format(*dns_address))
 
-	sock.bind((host,port))
+	sock.bind(dns_address)
 
-	while True:
-		data, client_address = sock.recvfrom(1024)
+	try:
+		while True:
+			data, client_address = sock.recvfrom(1024)
 
-		print("recive from : {}".format(client_address))
-		print(data.decode())
+			print("recive from : {}".format(client_address))
+			print(data.decode())
+	except KeyboardInterrupt:
+		print("keyboard interrupt, exiting...")
+	finally:
+		sock.close()
 
 if __name__ == '__main__':
 	main()
+

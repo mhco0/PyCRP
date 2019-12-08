@@ -6,7 +6,7 @@ from tkinter import ttk
 from tkinter import messagebox
 import rdt
 
-class Library:
+class Library(object):
     """Library saves file.txt"""
 
     def __init__(self, sm, addr, typeSocket):
