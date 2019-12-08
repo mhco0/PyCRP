@@ -5,7 +5,7 @@ from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
 
-class Library:
+class Library(object):
     """Library saves file.txt"""
 
     def __init__(self, sm):
@@ -44,7 +44,7 @@ class Library:
 
     def Get_Books_From_Server(self):
         # Comunicação com o servidor pra pegar os livros existentes.
-        books = ['Narnia.txt', 'Star wars.txt']
+        books = ['Narnia.txt', 'Starwars.txt']
 
         return books
 
