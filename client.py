@@ -2,12 +2,9 @@ import dns
 import sys
 import socket
 import rdt
-<<<<<<< HEAD
 import library
-=======
 import selectors
 import types
->>>>>>> 40482c333750f85c3eef54c0dab420f7032345c9
 
 # Selectors -> allows high-level and efficient I/O multiplexing
 sel = selectors.DefaultSelector()
@@ -55,22 +52,20 @@ def tcp_client_connection_handler(key, mask):
 def get_ip_from_dns(addrDomain = "crp.server.teste", dns_address = ("localhost", 8080)):
 
     print("pegando ip do server")
-    client_ip = socket.gethostbyname(socket.gethostname())
-<<<<<<< HEAD
-    msg = "FIND " + addrDomain
+    # client_ip = socket.gethostbyname(socket.gethostname())
+    # msg = "FIND " + addrDomain
     
-    udpSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    udpSocket.bind((socket.gethostname(), 9090)) #9090 é a porta do client
-    udpSocket.sendto(str(msg).encode(), dns_addr)
+    # udpSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    # udpSocket.bind((socket.gethostname(), 9090)) #9090 é a porta do client
+    # udpSocket.sendto(str(msg).encode(), dns_addr)
     
-    data, dns_addr = udpSocket.recvfrom(1024)
-    print(data.decode())
-    return data.decode()
-=======
+    # data, dns_addr = udpSocket.recvfrom(1024)
+    # print(data.decode())
+    # return data.decode()
+
     data = "FIND " + addrDomain
 
     udpSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    # udpSocket.bind((socket.gethostname(), 9090))
     try:
         print('sending {!r}'.format(data))
         sent = udpSocket.sendto(str(data).encode(),dns_address)
@@ -86,13 +81,11 @@ def get_ip_from_dns(addrDomain = "crp.server.teste", dns_address = ("localhost",
     
     
 
->>>>>>> 40482c333750f85c3eef54c0dab420f7032345c9
 
 def main():
     assert len(sys.argv) == 2
     addrServer = input("Insira o endereço de domínio hospedeiro desejado: ")
 
-<<<<<<< HEAD
     ipServer = get_ip_from_dns()
     sm = rdt.Rdt()
     ip_port = (ipServer, 5000)
@@ -100,37 +93,35 @@ def main():
     print("to aq")
     library.Library(sm, ip_port, sys.argv[1].lower())
     library.mainloop()
-=======
     dns_address = ('localhost',8080)
+    
     server_ip = get_ip_from_dns(addrServer, dns_address)
     print('server ip =',server_ip)
     server_address = (server_ip,5000)
 
-    if sys.argv[1].lower() == "--udp":
-        sm = rdt.Rdt()
+    # if sys.argv[1].lower() == "--udp":
+    #     sm = rdt.Rdt()
+    #     sm.config_transmitter(server_address)
 
-        sm.config_transmitter(server_address)
+    #     sm.send({232:"meme"})
+    # elif sys.argv[1].lower() == "--tcp":
+    #     num_conns = 1
+    #     for conn_id in range(num_conns):
+    #         tcp_start_connections(server_address, conn_id+1)
 
-        sm.send({232:"meme"})
-    elif sys.argv[1].lower() == "--tcp":
-        num_conns = 1
-        for conn_id in range(num_conns):
-            tcp_start_connections(server_address, conn_id+1)
-
-        try:
-            while True:
-                events = sel.select(timeout=1)
-                if events:
-                    for key, mask in events:
-                        tcp_client_connection_handler(key, mask)
-                if not sel.get_map():
-                    break
-        except KeyboardInterrupt:
-            print("keyboard interrupt, exiting...")
-        finally:
-            sel.close()
+    #     try:
+    #         while True:
+    #             events = sel.select(timeout=1)
+    #             if events:
+    #                 for key, mask in events:
+    #                     tcp_client_connection_handler(key, mask)
+    #             if not sel.get_map():
+    #                 break
+    #     except KeyboardInterrupt:
+    #         print("keyboard interrupt, exiting...")
+    #     finally:
+    #         sel.close()
                 
->>>>>>> 40482c333750f85c3eef54c0dab420f7032345c9
 
 if __name__ == "__main__":
     main()
