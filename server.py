@@ -59,8 +59,8 @@ def register_in_dns(dns_address):
 	udpSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 	server_alias = "crp.server.teste" 
-	# server_ip = socket.gethostbyname(socket.gethostname())
-	data = "ADD " + server_alias
+	# # server_ip = socket.gethostbyname(socket.gethostname())
+	# data = "ADD " + server_alias
 
 	#data = (server_alias,server_ip)
 	data = "ADD " + server_alias
