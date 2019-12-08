@@ -162,12 +162,13 @@ class Rdt:
 		pass
 
 	def recv(self):
-		recv_data = self.state_machine()
+		recv_data,ip_transmitter = self.state_machine()
 		self.reset_state()
-		return recv_data
+		return recv_data,ip_transmitter
 
 	def state_machine(self):
 		all_data = ''
+		ip_transmitter = 'localhost'
 
 		if self.type == "TRANSMITTER":
 			first_pack = True
@@ -241,6 +242,7 @@ class Rdt:
 					print('here')
 					try:
 						bpack, tmitt_address = self.sock.recvfrom(Package.mss())
+						ip_transmitter = tmitt_address
 
 						sqn,data = Package.convert_pack(bpack)
 						print(data)
@@ -264,7 +266,8 @@ class Rdt:
 				elif self.state == States.WAIT_SQ_ONE:
 					print('now here')
 					try:
-						bpack, tmtt_address = self.sock.recvfrom(Package.mss())	
+						bpack, tmtt_address = self.sock.recvfrom(Package.mss())
+						ip_transmitter = tmtt_address	
 
 						sqn,data = Package.convert_pack(bpack)
 						print(data)
@@ -297,4 +300,4 @@ class Rdt:
 		else:
 			raise NameError("RDT type not defined")
 
-		return all_data
+		return all_data,ip_transmitter
