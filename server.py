@@ -96,7 +96,7 @@ def help():
 
 
 def OpenBook(nameBook = "marcos.txt"):
-	path = "./books/" + nameBook
+	path = "./serverbooks/" + nameBook
 	book = open(path, 'r')
 	text = book.read()
 	print(text)
@@ -104,14 +104,14 @@ def OpenBook(nameBook = "marcos.txt"):
 	return text
 
 def SaveBook(nameBook= "Marcos", text= "oi\neu\nsou\nmarcos"):
-	path = "./books/" + nameBook
-	newBook = open(path, 'x')
+	path = "./serverbooks/" + nameBook
+	newBook = open(path, 'w')
 	newBook.write(text)
 	newBook.close()
 
 def main():
-	dns_address = ('localhost',8080)
-	server_address = ('localhost',5000)
+	dns_address = ('localhost', 8080)
+	server_address = ('localhost', 5000)
 	assert len(sys.argv) == 2
 
 	if sys.argv[1].lower() == "--udp" :
@@ -124,25 +124,27 @@ def main():
 			sm.config_receiever(server_address)
 			data, ip_transmissor = sm.recv()
 			print("Recebi dados: ", data, ip_transmissor)
+			addr_client = (ip_transmissor[0], 9090)
 			if data == "getallnamebooks":
-				print("get all")
-				serverBooks = os.listdir("./books")
-				sm.config_transmitter(ip_transmissor)
+				serverBooks = os.listdir("./serverbooks")
+				print("vou enviar: ", serverBooks)
+				sm.config_transmitter(addr_client)
 				sm.send(serverBooks)
-
-			params = data.split()
-			if params[0].lower() == "download":
-				nameBook = params[1] 
-				txt = OpenBook(nameBook)
-				sm.config_transmitter(ip_transmissor)
-				sm.send(txt)
-			if params[0].lower() == "upload":
-				newBook = params[1]
-				sm.config_receiever(server_address)
-				txt, ip_transmissor = sm.recv()
-				SaveBook(newBook, txt)
-			else:
-				print("Não existe essa opção mermao")
+			else: 
+				params = data.split(" ", 1)
+				if params[0].lower() == "download":
+					nameBook = params[1] 
+					txt = OpenBook(nameBook)
+					sm.config_transmitter(addr_client)
+					sm.send(txt)
+				elif params[0].lower() == "upload":
+					newBook = params[1]
+					sm.config_receiever(server_address)
+					txt, ip_transmissor = sm.recv()
+					print("salando o livro")
+					SaveBook(newBook, txt)
+				else:
+					print("Não existe essa opção mermao")
 
 	elif sys.argv[1].lower() == "--tcp":
 		tcp_server_setup(server_address)

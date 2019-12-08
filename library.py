@@ -6,6 +6,11 @@ from tkinter import ttk
 from tkinter import messagebox
 import rdt
 
+def StrinToArray(strr):
+    str1 = strr.replace(']','').replace('[','')
+    l = str1.replace(" '",'').replace("'", "").split(",")
+    return l
+
 class Library(object):
     """Library saves file.txt"""
 
@@ -80,11 +85,15 @@ class Library(object):
 
     def Download_Window(self):
         books = self.Get_Books_From_Server()
+        books = StrinToArray(books)
         print("Recebi: ", books)
         txt = 'Books Avaible:  \n'
+        print("loop: ")
         for name in books:
+            print(name)
             txt = txt + name[:len(name)-4] +', '
         txt = txt[:len(txt)-2] + '.'
+        print("texto: ", txt)
 
         downWindow = Tk()
         downWindow.geometry("500x400")
