@@ -2,6 +2,8 @@ import socket
 import sys
 import threading
 import rdt
+import library
+import os
 
 """ Usage ports ->
 	8080 : dns local
@@ -16,7 +18,8 @@ def register_in_dns(dns_address):
 	server_alias = "crp.server.teste" 
 	server_ip = socket.gethostbyname(socket.gethostname())
 
-	data = (server_alias,server_ip)
+	#data = (server_alias,server_ip)
+	data = "ADD " + server_alias
 
 	with socket.socket(socket.AF_INET,socket.SOCK_DGRAM) as sock:
 		if not appear:
@@ -39,15 +42,20 @@ def main():
 	if sys.argv[1].lower() == "--udp" :
 		##justfortst
 		
-		#register_in_dns(('localhost',8080))
+		register_in_dns(('localhost',8080))
 
 		sm = rdt.Rdt()
 
 		sm.config_receiever(('localhost',5000))
-
+		lb = library.Library(sm, ('localhost, 8000'), "")
 		while True:
 			data = sm.recv()
 			print(data)
+			if data == "getallnamebooks":
+				serverBooks = lb
+
+
+
 
 	elif sys.argv[1].lower() == "--tcp":
 		"""

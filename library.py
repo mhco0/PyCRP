@@ -4,47 +4,48 @@ import rdt
 from tkinter import * 
 from tkinter import ttk
 from tkinter import messagebox
+import rdt
 
 class Library:
     """Library saves file.txt"""
 
-    def __init__(self, sm):
+    def __init__(self, sm, addr, typeSocket):
+        self.myAddr = ('localhost', 9090)
+        self.AddrServer = addr
         self.sm = sm
-        self.Main_Menu()
-
+        self.typeSocket = typeSocket
+        
+        if typeSocket == "--udp" or typeSocket == "--tcp":
+            self.Main_Menu()
+        
     def OpenBook(self, nameBook = "marcos"):
-        nameBook = nameBook + ".txt"
-        allBooks = os.listdir("./books")
-        print(allBooks)
-        for name in allBooks:
-            if nameBook == name:
-                path = "./books/" + nameBook
-                book = open(path, 'r')
-                text = book.read()
-                print(text)
-                book.close()
+        path = "./books/" + nameBook
+        book = open(path, 'r')
+        text = book.read()
+        print(text)
+        book.close()
         return text
     
     def SaveBook(self, nameBook= "Marcos", text= "oi\neu\nsou\nmarcos"):
-        nameBook = nameBook + ".txt"
-        allBooks = os.listdir("./books")
-        print(allBooks)
-        bookExist = False
-        for name in allBooks:
-            if name == nameBook:
-                bookExist = True
-                print("The book already exist!")
-                break
-
-        if not bookExist:
-            path = "./books/" + nameBook
-            newBook = open(path, 'x')
-            newBook.write(text)
-            newBook.close()
+        path = "./books/" + nameBook
+        newBook = open(path, 'x')
+        newBook.write(text)
+        newBook.close()
 
     def Get_Books_From_Server(self):
         # Comunicação com o servidor pra pegar os livros existentes.
-        books = ['Narnia.txt', 'Star wars.txt']
+        msg = "getallnamebooks"
+        if self.typeSocket == '--udp':
+            # Peço ao servidor os livros disponíveis
+            self.sm.config_transmitter(self.AddrServer)
+            self.sm.send(msg)
+
+            # Recebo do servidor o nome de todos os livros disponíveis
+            self.sm.config_receiever(self.myAddr)
+            books = self.sm.recv()
+        elif self.typeSocket == '--tcp':
+            # Parte de natália
+            pass
 
         return books
 
@@ -57,8 +58,15 @@ class Library:
             if bname == bookName:
                 exist = True
         if exist:
-            ## Envia para o servidor
-            print("Envia pro server")
+            ## Envia/Recebe para/do o servidor
+            msg = "download "+ bookName
+            self.sm.config_transmitter(self.AddrServer)
+            self.sm.send(msg)
+            # Recebo do servidor o livro requisitado
+            self.sm.config_receiever(self.myAddr)
+            book = self.sm.recv()
+
+            self.SaveBook(bookName, book)
             messagebox.showinfo("Download", "The book has been downloaded!")
         else:
             messagebox.showerror("ERROR", "The book doesn't exist!")
@@ -71,14 +79,12 @@ class Library:
             txt = txt + name[:len(name)-4] +', '
         txt = txt[:len(txt)-2] + '.'
 
-
         downWindow = Tk()
         downWindow.geometry("500x400")
         downWindow.minsize(width= 500, height = 200)
         downWindow.title("Download")
         downWindow.configure(bg = 'white')
 
-        
 
         ltext = Label(downWindow, text = txt, fg = "black", bg="white",font = ("Purisa, 13"))
         ltext.pack(side = TOP, expand = YES, padx = 20, pady = 60, fill = BOTH)
@@ -101,6 +107,16 @@ class Library:
         if exist:
             ## Envia para o servidor
             print("Envia pro server")
+
+            msg = "upload " + bookName
+            # Aviso pro servidor que é um upload de um livro
+            self.sm.config_transmitter(self.AddrServer)
+            self.sm.send(msg)
+            book = self.OpenBook(bookName)
+            # Envio o livro pro servidor
+            self.sm.config_transmitter(self.AddrServer)
+            self.sm.send(book)
+
             messagebox.showinfo("Upload", "The book has been sent to the server!")
         else:
             messagebox.showerror("ERROR", "The book doesn't exist!")
@@ -130,7 +146,6 @@ class Library:
         binput = Button(uploadWindow, text = 'Upload', width=20,bg = "#20B2AA", fg ="white", command= lambda: self.Upload_Book(einput.get(), myBooks))
         binput.pack(side= BOTTOM, expand = YES, padx = 10, pady = [0, 20], fill = BOTH)
 
-    
 
     def Show_My_Books(self):
         myBooks = os.listdir("./books")
@@ -184,25 +199,3 @@ class Library:
 
         but_Upload = Button(root, text = 'Quit', width=50 ,bg = "#20B2AA", fg ="white", command= root.quit)
         but_Upload.pack(side= TOP, expand = YES, padx = 20, pady = [0, 20], fill = BOTH)
-
-def main():
-    
-    # assert len(sys.argv) == 2
-    # #addrServer = input("Insira o endereço de domínio hospedeiro desejado: ")
-
-    # #ipServer = get_ip_from_dns()
-
-    sm = rdt.Rdt()
-    # if sys.argv[1].lower() == "--udp":
-
-    #     sm.config_transmitter(('localhost',5000))
-
-    #     sm.send("teste meme so pra ver se vai".encode())
-    # elif sys.argv[1].lower() == "--tcp":
-    #     pass
-
-    lb = Library(sm)
-    mainloop()
-
-if __name__ == "__main__":
-    main()
