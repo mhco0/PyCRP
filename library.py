@@ -10,7 +10,7 @@ class Library(object):
     """Library saves file.txt"""
 
     def __init__(self, sm, addr, typeSocket):
-        self.myAddr = ('localhost', 9090)
+        self.myAddr = ('127.0.0.1', 9090)
         self.AddrServer = addr
         self.sm = sm
         self.typeSocket = typeSocket
@@ -42,7 +42,7 @@ class Library(object):
 
             # Recebo do servidor o nome de todos os livros disponíveis
             self.sm.config_receiever(self.myAddr)
-            books = self.sm.recv()
+            books, _ = self.sm.recv()
         elif self.typeSocket == '--tcp':
             # Parte de natália
             pass
@@ -66,7 +66,7 @@ class Library(object):
                 self.sm.send(msg)
                 # Recebo do servidor o livro requisitado
                 self.sm.config_receiever(self.myAddr)
-                book = self.sm.recv()
+                book, _ = self.sm.recv()
             
             elif self.typeSocket == "--tcp":
                 #Parte de natália

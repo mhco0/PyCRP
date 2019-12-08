@@ -123,9 +123,9 @@ def main():
 		while True:
 			sm.config_receiever(server_address)
 			data, ip_transmissor = sm.recv()
-			addr_client = (ip_transmissor[0], 9090)
-			print("Recebi dados: ", data, addr_client)
+			print("Recebi dados: ", data, ip_transmissor)
 			if data == "getallnamebooks":
+				print("get all")
 				serverBooks = os.listdir("./books")
 				sm.config_transmitter(ip_transmissor)
 				sm.send(serverBooks)
