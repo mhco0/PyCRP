@@ -125,7 +125,7 @@ class Rdt:
 		pass
 
 	def start_timer(self):
-		self.sock.settimeout(3.0)
+		self.sock.settimeout(1.0)
 		pass
 
 	def stop_timer(self):

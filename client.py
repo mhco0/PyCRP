@@ -27,7 +27,7 @@ def get_ip_from_dns(addrDomain = "crp.server.teste", dns_address = ('192.168.0.2
 def main():
     assert len(sys.argv) == 2
 
-    server_ip = get_ip_from_dns(dns_address=('192.168.0.23',8080))
+    server_ip = get_ip_from_dns(dns_address=('172.20.4.159',8080))
     print("server ip: ", server_ip)
     server_adress = (server_ip, 9090)
 
