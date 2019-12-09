@@ -49,7 +49,7 @@ def tcp_client_connection_handler(key, mask):
             data.outb = data.outb[sent:]
 
 
-def get_ip_from_dns(addrDomain = "crp.server.teste", dns_address = ("localhost", 8080)):
+def get_ip_from_dns(addrDomain = "crp.server.teste", dns_address = ('192.168.0.23', 8080)):
 
     print("pegando ip do server")
     # client_ip = socket.gethostbyname(socket.gethostname())
@@ -85,10 +85,10 @@ def get_ip_from_dns(addrDomain = "crp.server.teste", dns_address = ("localhost",
 def main():
     assert len(sys.argv) == 2
 
-    server_ip = get_ip_from_dns()
+    server_ip = get_ip_from_dns(dns_address=('192.168.0.23',8080))
     print("server ip: ", server_ip)
     sm = rdt.Rdt()
-    ip_port = (server_ip, 5000)
+    ip_port = (server_ip, 9090)
 
     print("to aq")
     library.Library(sm, ip_port, sys.argv[1].lower())

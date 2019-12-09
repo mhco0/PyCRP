@@ -1,6 +1,7 @@
 import os
 import graphics
 import rdt
+import socket
 from tkinter import * 
 from tkinter import ttk
 from tkinter import messagebox
@@ -15,7 +16,7 @@ class Library(object):
     """Library saves file.txt"""
 
     def __init__(self, sm, addr, typeSocket):
-        self.myAddr = ('127.0.0.1', 9090)
+        self.myAddr = (socket.gethostbyname(socket.gethostname()), 9090)
         self.AddrServer = addr
         self.sm = sm
         self.typeSocket = typeSocket

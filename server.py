@@ -11,7 +11,7 @@ import dns
 """ Usage ports ->
 	8080 : dns local
 
-	5000 : server
+	9090 : server
 """
 
 sel = selectors.DefaultSelector()
@@ -110,8 +110,8 @@ def SaveBook(nameBook= "Marcos", text= "oi\neu\nsou\nmarcos"):
 	newBook.close()
 
 def main():
-	dns_address = ('localhost', 8080)
-	server_address = ('localhost', 5000)
+	dns_address = ('192.168.0.23', 8080)
+	server_address = (socket.gethostbyname(socket.gethostname()), 9090)
 	assert len(sys.argv) == 2
 
 	if sys.argv[1].lower() == "--udp" :
