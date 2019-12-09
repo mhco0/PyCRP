@@ -5,22 +5,39 @@ from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
 import rdt
+import socket
+
 
 def StrinToArray(strr):
     str1 = strr.replace(']','').replace('[','')
     l = str1.replace(" '",'').replace("'", "").split(",")
     return l
 
+
+def tcp_start_connections(server_address, connid):
+    server_addr = (server_address)
+    print("starting connection", connid, "to", server_addr)
+
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    sock.connect(server_addr)
+    
+    return sock
+
+
 class Library(object):
     """Library saves file.txt"""
 
-    def __init__(self, sm, addr, typeSocket):
+    def __init__(self, server_addr, typeSocket):
         self.myAddr = ('127.0.0.1', 9090)
-        self.AddrServer = addr
-        self.sm = sm
-        self.typeSocket = typeSocket
-        
-        if typeSocket == "--udp" or typeSocket == "--tcp":
+        self.AddrServer = server_addr
+        self.typeSocket = typeSocket    
+
+        if typeSocket == "--tcp":
+            self.sock = tcp_start_connections(self.AddrServer,1)
+            self.Main_Menu()
+        elif typeSocket == "--udp":
+            self.sm = rdt.Rdt()
             self.Main_Menu()
         
     def OpenBook(self, nameBook = "marcos"):
@@ -33,7 +50,7 @@ class Library(object):
     
     def SaveBook(self, nameBook= "Marcos", text= "oi\neu\nsou\nmarcos"):
         path = "./books/" + nameBook
-        newBook = open(path, 'x')
+        newBook = open(path, 'w+')
         newBook.write(text)
         newBook.close()
 
@@ -49,9 +66,14 @@ class Library(object):
             self.sm.config_receiever(self.myAddr)
             books, _ = self.sm.recv()
         elif self.typeSocket == '--tcp':
-            # Parte de natália
-            pass
+            # Peço ao servidor os livros disponíveis            
+            self.sock.send(msg.encode()) 
 
+            # # Recebo do servidor o nome de todos os livros disponíveis
+            _books = self.sock.recv(1024)
+            books = _books.decode()
+
+        print('books =', books)
         return books
 
     def Download_Book(self, bookName, books):
@@ -64,9 +86,9 @@ class Library(object):
                 exist = True
         if exist:
             
+            msg = "download "+ bookName
             if self.typeSocket == "--udp":
                 ## Envia solicitação de livro pro serve e recebe o livro dps
-                msg = "download "+ bookName
                 self.sm.config_transmitter(self.AddrServer)
                 self.sm.send(msg)
                 # Recebo do servidor o livro requisitado
@@ -74,8 +96,12 @@ class Library(object):
                 book, _ = self.sm.recv()
             
             elif self.typeSocket == "--tcp":
-                #Parte de natália
-                pass
+                # Envia solicitação de livro pro serve e recebe o livro dps
+                self.sock.send(msg.encode()) 
+
+                # Recebo do servidor o livro requisitado
+                _books = self.sock.recv(1024)
+                book = _books.decode()
 
             self.SaveBook(bookName, book)
             messagebox.showinfo("Download", "The book has been downloaded!")
@@ -122,10 +148,10 @@ class Library(object):
                 exist = True
         if exist:
             
+            ## Envia para o servidor
+            print("Envia pro server")
+            msg = "upload " + bookName
             if self.typeSocket == "--udp":
-                ## Envia para o servidor
-                print("Envia pro server")
-                msg = "upload " + bookName
                 # Aviso pro servidor que é um upload de um livro
                 self.sm.config_transmitter(self.AddrServer)
                 self.sm.send(msg)
@@ -134,8 +160,12 @@ class Library(object):
                 self.sm.config_transmitter(self.AddrServer)
                 self.sm.send(book)
             elif self.typeSocket == "--tcp":
-                # Parte de natália
-                pass
+                # Aviso pro servidor que é um upload de um livro
+                self.sock.send(msg.encode()) 
+
+                book = self.OpenBook(bookName)
+                # Envio o livro pro servidor
+                self.sock.send(book.encode())
 
             messagebox.showinfo("Upload", "The book has been sent to the server!")
         else:

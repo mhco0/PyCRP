@@ -1,5 +1,6 @@
 import socket
 import sys
+from _thread import *
 import threading
 import rdt
 import library
@@ -14,54 +15,11 @@ import dns
 	5000 : server
 """
 
-sel = selectors.DefaultSelector()
-
-
-def tcp_server_setup(server_address):
-	lsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	lsock.bind(server_address)
-	lsock.listen()
-	print("tcp server listening on", server_address)
-	lsock.setblocking(False)
-	sel.register(lsock, selectors.EVENT_READ, data=None)
-
-
-def tcp_accept_connections(sock):
-    conn, addr = sock.accept()  
-    print("accepted connection from", addr)
-    # Socket operando em modo não bloqueante
-    conn.setblocking(False)
-    data = types.SimpleNamespace(addr=addr, inb=b"", outb=b"")
-    events = selectors.EVENT_READ | selectors.EVENT_WRITE
-    sel.register(conn, events, data=data)
-
-
-def tcp_server_connection_handler(key, mask):
-    sock = key.fileobj
-    data = key.data
-    if mask & selectors.EVENT_READ:
-        recv_data = sock.recv(1024) 
-        if recv_data:
-            data.outb += recv_data
-        else:
-            print("closing connection to", data.addr)
-            sel.unregister(sock)
-            sock.close()
-    if mask & selectors.EVENT_WRITE:
-        if data.outb:
-            print("echoing", repr(data.outb), "to", data.addr)
-            sent = sock.send(data.outb)  
-            data.outb = data.outb[sent:]
-
-
+mutex = threading.Lock()
 
 def register_in_dns(dns_address, server_alias = "crp.server.teste" ): 
 	udpSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-	# # server_ip = socket.gethostbyname(socket.gethostname())
-	# data = "ADD " + server_alias
-
-	#data = (server_alias,server_ip)
 	data = "ADD " + server_alias
 	try:
 		print('sending {!r}'.format(data))
@@ -70,23 +28,6 @@ def register_in_dns(dns_address, server_alias = "crp.server.teste" ):
 	finally:
 		print('closing socket')
 		udpSocket.close()
-
-	# appear = False
-
-	# server_alias = "crp.server.teste" 
-	# server_ip = socket.gethostbyname(socket.gethostname())
-
-	# data = (server_alias,server_ip)
-
-	# with socket.socket(socket.AF_INET,socket.SOCK_DGRAM) as sock:
-	# 	if not appear:
-	# 		print ("Trying to apply a {}".format('UDP'))
-	# 		print ("\tsocket family (AF_INET) : {},\n\tsocket type (SOCK_DGRAM): {},\n\tsocket protocol : {}".format(sock.family,sock.type,sock.proto))
-	# 		appear = True
-
-	# 	sock.sendto(str(data).encode(),dns_address)
-
-	# pass
 
 
 def help():
@@ -105,9 +46,64 @@ def OpenBook(nameBook = "marcos.txt"):
 
 def SaveBook(nameBook= "Marcos", text= "oi\neu\nsou\nmarcos"):
 	path = "./serverbooks/" + nameBook
-	newBook = open(path, 'w')
+	newBook = open(path, 'w+')
 	newBook.write(text)
 	newBook.close()
+
+
+
+def tcp_server_setup(server_address):
+	_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	_socket.bind(server_address)
+	_socket.listen()
+	print("tcp server listening on", server_address)
+
+	return _socket
+
+
+def tcp_server_connection_handler(conn): 
+	while True: 
+
+		# Recebe dados do cliente
+		data = conn.recv(1024) 
+		if not data: 
+			print('Bye') 
+				
+			# Libera o lock do mutex
+			mutex.release() 
+			break
+
+		if data.decode() == "getallnamebooks":
+			serverBooks = os.listdir("./serverbooks")
+			print("vou enviar: ", serverBooks)
+			snd_data = ""
+			for i,m in enumerate(serverBooks):
+				if i != len(serverBooks) - 1:
+					snd_data += m + ","
+				else:
+					snd_data += m
+			print('len = ',len(snd_data.encode()))
+			conn.send(snd_data.encode())
+		else: 
+			_data = data.decode()
+			params = _data.split(" ", 1)
+			if params[0].lower() == "download":
+				nameBook = params[1] 
+				txt = OpenBook(nameBook)
+				conn.send(txt.encode())
+			elif params[0].lower() == "upload":
+				newBook = params[1]
+				print("salvando o livro")
+				txt = conn.recv(1024)
+				SaveBook(newBook, txt.decode())
+			else:
+				print("closing connection to", data.addr)
+				mutex.release() 
+				break
+    
+	# Fecha a conexão 
+	conn.close() 
+
 
 def main():
 	dns_address = ('localhost', 8080)
@@ -147,20 +143,24 @@ def main():
 					print("Não existe essa opção mermao")
 
 	elif sys.argv[1].lower() == "--tcp":
-		tcp_server_setup(server_address)
+		socket = tcp_server_setup(server_address)
 		register_in_dns(dns_address)
 		try:
 			while True:
-				events = sel.select(timeout=None)
-				for key, mask in events:
-					if key.data is None:
-						tcp_accept_connections(key.fileobj)
-					else:
-						tcp_server_connection_handler(key, mask)
+				# EStabelece a conexão com o cliente
+				conn, addr = socket.accept() 
+		
+				# Lock do mutex para o novo cliente 
+				mutex.acquire() 
+				print('Connected to :', addr[0], ':', addr[1]) 
+		
+				# Começa uma nova thread para as requisições do novo cliente 
+				start_new_thread(tcp_server_connection_handler, (conn,)) 
+
 		except KeyboardInterrupt:
 			print("keyboard interrupt, exiting...")
 		finally:
-			sel.close()
+			socket.close()
 	else:
 		help()
 		raise NameError("You choose a invalid option")
