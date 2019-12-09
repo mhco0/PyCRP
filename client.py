@@ -4,7 +4,7 @@ import socket
 import library
 
 
-def get_ip_from_dns(addrDomain = "crp.server.teste", dns_address = ("localhost", 8080)):
+def get_ip_from_dns(addrDomain = "crp.server.teste", dns_address = ('192.168.0.23', 8080)):
 
     print("pegando ip do server")
     data = "FIND " + addrDomain
@@ -27,9 +27,9 @@ def get_ip_from_dns(addrDomain = "crp.server.teste", dns_address = ("localhost",
 def main():
     assert len(sys.argv) == 2
 
-    server_ip = get_ip_from_dns()
+    server_ip = get_ip_from_dns(dns_address=('192.168.0.23',8080))
     print("server ip: ", server_ip)
-    server_adress = (server_ip, 5000)
+    server_adress = (server_ip, 9090)
 
     library.Library(server_adress, sys.argv[1].lower())
     library.mainloop()

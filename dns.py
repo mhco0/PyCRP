@@ -20,13 +20,14 @@ def find_server(server_alias):
 
 def main():
 
-	dnsHost = 'localhost'
+	dnsHost = socket.gethostbyname(socket.gethostname())
 	dnsPort = 8080
 
 	dnsSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 	dnsSocket.bind((dnsHost,dnsPort))
 	print ("DNS STARTED")
 	print ("\tDNS PORT: {}".format(dnsPort)) 
+	print (socket.gethostbyname(socket.gethostname()))
 
 	while True:
 		data, client_address = dnsSocket.recvfrom(1024)
@@ -40,6 +41,7 @@ def main():
 			print (server_mapping)
 		elif command == 'FIND':
 			result = find_server(server_alias)
+			print ("server found: ip_address is {}".format(result))
 			dnsSocket.sendto(str(result).encode(), client_address)
 
 if __name__ == "__main__" :

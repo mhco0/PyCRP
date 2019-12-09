@@ -77,7 +77,6 @@ class Package:
 	# The first byte in the package always will be the sequence number for acks in the rdt class
 	def bytes_to_send(self):
 		if self.has_sent_first_package() :
-			print(self.array_bytes[self.start():min(self.start()+self.mss,self.len_pack)])
 			return self.seq_num.encode() + self.array_bytes[self.start():min(self.start()+self.mss,self.len_pack)]
 		else:
 			return self.seq_num.encode() + str(self.len_pack).encode()
@@ -105,7 +104,7 @@ class Rdt:
 		self.type = "UNKNOW"
 		pass
 
-	def config_receiever(self,address=('localhost',5000)):
+	def config_receiever(self,address=(socket.gethostbyname(socket.gethostname()),9090)):
 		self.type = "RECEIEVER"
 
 		self.state = States.WAIT_SQ_ZERO
@@ -233,7 +232,7 @@ class Rdt:
 				if self.package.all_sent():
 					break
 
-			print("All data sent")
+			#print("All data sent")
 		elif self.type == "RECEIEVER":
 			first_pack = True
 			package_size = -1
@@ -241,7 +240,6 @@ class Rdt:
 			while True:
 				# last this
 				if self.state == States.WAIT_SQ_ZERO:
-					print('here')
 					try:
 						bpack, tmitt_address = self.sock.recvfrom(Package.mss())
 						transmitter_adress = tmitt_address
@@ -266,7 +264,6 @@ class Rdt:
 						pass 
 
 				elif self.state == States.WAIT_SQ_ONE:
-					print('now here')
 					try:
 						bpack, tmtt_address = self.sock.recvfrom(Package.mss())
 						transmitter_adress = tmtt_address	
@@ -297,8 +294,7 @@ class Rdt:
 					break
 
 
-			print("All data received")
-
+			#print("All data received")
 		else:
 			raise NameError("RDT type not defined")
 
