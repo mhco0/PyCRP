@@ -137,10 +137,10 @@ def main():
 					newBook = params[1]
 					sm.config_receiever(server_address)
 					txt, ip_transmissor = sm.recv()
-					print("salando o livro")
+					print("salvando o livro")
 					SaveBook(newBook, txt)
 				else:
-					print("Não existe essa opção mermao")
+					print("Opção inexistente")
 
 	elif sys.argv[1].lower() == "--tcp":
 		socket = tcp_server_setup(server_address)
