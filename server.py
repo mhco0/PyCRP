@@ -8,6 +8,7 @@ import os
 import selectors
 import types
 import dns
+from get_ip import *
 
 """ Usage ports ->
 	8080 : dns local
@@ -107,7 +108,7 @@ def tcp_server_connection_handler(conn):
 
 def main():
 	dns_address = ('192.168.0.23', 8080)
-	server_address = (socket.gethostbyname(socket.gethostname()), 9090)
+	server_address = (get_ip(), 9090)
 	assert len(sys.argv) == 2
 
 	if sys.argv[1].lower() == "--udp" :

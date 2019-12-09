@@ -1,5 +1,6 @@
 import socket
 import sys
+from get_ip import *
 
 server_mapping = {}
 
@@ -20,14 +21,14 @@ def find_server(server_alias):
 
 def main():
 
-	dnsHost = socket.gethostbyname(socket.gethostname())
+	dnsHost = get_ip()
 	dnsPort = 8080
 
 	dnsSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 	dnsSocket.bind((dnsHost,dnsPort))
 	print ("DNS STARTED")
 	print ("\tDNS PORT: {}".format(dnsPort)) 
-	print (socket.gethostbyname(socket.gethostname()))
+	print (get_ip())
 
 	while True:
 		data, client_address = dnsSocket.recvfrom(1024)
