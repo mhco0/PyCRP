@@ -143,12 +143,12 @@ def main():
 					print("Opção inexistente")
 
 	elif sys.argv[1].lower() == "--tcp":
-		socket = tcp_server_setup(server_address)
+		sock = tcp_server_setup(server_address)
 		register_in_dns(dns_address)
 		try:
 			while True:
 				# EStabelece a conexão com o cliente
-				conn, addr = socket.accept() 
+				conn, addr = sock.accept() 
 		
 				# Lock do mutex para o novo cliente 
 				mutex.acquire() 
@@ -160,7 +160,7 @@ def main():
 		except KeyboardInterrupt:
 			print("keyboard interrupt, exiting...")
 		finally:
-			socket.close()
+			sock.close()
 	else:
 		help()
 		raise NameError("You choose a invalid option")
